@@ -10,8 +10,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/mattn/go-mastodon"
@@ -42,10 +40,12 @@ func main() {
 	lo.Must(cron.AddFunc("0 * * * *", updateIcon))
 	cron.Start()
 	go streamUser()
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 	log.Println("Wasa wasa")
-	<-done
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("wasawasa"))
+		w.WriteHeader(200)
+	})
+	http.ListenAndServe("0.0.0.0:80", nil)
 }
 
 func streamUser() {
