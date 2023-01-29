@@ -1,0 +1,155 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"math/rand"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/mattn/go-mastodon"
+	crontab "github.com/robfig/cron/v3"
+	"github.com/samber/lo"
+)
+
+var mstdn *mastodon.Client
+
+func init() {
+	clientID := os.Getenv("MASTODON_CLIENT_ID")
+	clientSecret := os.Getenv("MASTODON_CLIENT_SECRET")
+	accessToken := os.Getenv("MASTODON_ACCESS_TOKEN")
+	if clientID == "" || clientSecret == "" || accessToken == "" {
+		panic("MASTODON_CLIENT_ID, MASTODON_CLIENT_SECRET, and MASTODON_ACCESS_TOKEN must be set")
+	}
+
+	mstdn = mastodon.NewClient(&mastodon.Config{
+		Server:       "https://social.vivaldi.net",
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		AccessToken:  accessToken,
+	})
+}
+
+func main() {
+	cron := crontab.New()
+	lo.Must(cron.AddFunc("0 * * * *", updateIcon))
+	cron.Start()
+	go streamUser()
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
+	log.Println("Wasa wasa")
+	<-done
+}
+
+func streamUser() {
+	delay := time.Second
+	for {
+		ch, err := mstdn.StreamingUser(context.Background())
+		if err != nil {
+			log.Println(err)
+			log.Println("Reconnect:", delay)
+			time.Sleep(delay)
+			delay *= 2
+			continue
+		}
+		log.Println("Started streaming!!")
+		delay = time.Second
+		for e := range ch {
+			switch e := e.(type) {
+			case *mastodon.UpdateEvent:
+				onUpdate(e.Status)
+			case *mastodon.NotificationEvent:
+				onNotification(e.Notification)
+			}
+		}
+		log.Println("Closed streaming. Restarting...")
+		time.Sleep(delay)
+	}
+}
+
+func onUpdate(status *mastodon.Status) {
+	if status.Account.StatusesCount%686 == 0 {
+		count := status.Account.StatusesCount
+		killme := count / 686
+		text := fmt.Sprintf(
+			"@%v さんが、投稿数\"%v\"(%vキルミー)\nに到達したよ！！\n%v",
+			status.Account.Username,
+			count,
+			killme,
+			ohome[rand.Intn(len(ohome))],
+		)
+		toot := &mastodon.Toot{
+			Status:      text,
+			InReplyToID: status.ID,
+			Visibility:  "unlisted",
+			Language:    "ja",
+		}
+		_, err := mstdn.PostStatus(context.Background(), toot)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func onNotification(notif *mastodon.Notification) {
+	switch notif.Type {
+	case "follow":
+		log.Println("Followed by:", notif.Account.Acct)
+		go mstdn.AccountFollow(context.Background(), notif.Account.ID)
+	}
+}
+
+func updateIcon() {
+	log.Println("Updating icon...")
+	name := i686[rand.Intn(len(i686))]
+	url := fmt.Sprintf("http://aka.saintpillia.com/killme/icon/%v.png", name)
+	log.Println("URL:", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println(err)
+	}
+	defer resp.Body.Close()
+	var buf bytes.Buffer
+	buf.ReadFrom(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Downloaded.")
+
+	body := new(bytes.Buffer)
+	mp := multipart.NewWriter(body)
+	w, err := mp.CreateFormFile("avatar", "avatar.png")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	buf.WriteTo(w)
+	mp.Close()
+
+	req, _ := http.NewRequest("PATCH", "https://social.vivaldi.net/api/v1/accounts/update_credentials", body)
+	req.Header.Set("Content-Type", mp.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("MASTODON_ACCESS_TOKEN"))
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+	if 200 <= resp.StatusCode && resp.StatusCode < 300 {
+		log.Println("Update icon done.")
+		return
+	}
+	log.Println("Update icon failed.")
+	log.Println("Status:", resp.Status)
+	bd, _ := io.ReadAll(resp.Body)
+	log.Println("Body:", string(bd))
+}
