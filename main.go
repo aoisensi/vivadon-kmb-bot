@@ -42,8 +42,8 @@ func main() {
 	go streamUser()
 	log.Println("Wasa wasa")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("wasawasa"))
 		w.WriteHeader(200)
+		w.Write([]byte("wasawasa"))
 	})
 	http.ListenAndServe("0.0.0.0:80", nil)
 }
