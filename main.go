@@ -20,6 +20,8 @@ import (
 var mstdn *mastodon.Client
 
 func init() {
+	rand.Seed(time.Now().UnixMicro())
+
 	clientID := os.Getenv("MASTODON_CLIENT_ID")
 	clientSecret := os.Getenv("MASTODON_CLIENT_SECRET")
 	accessToken := os.Getenv("MASTODON_ACCESS_TOKEN")
