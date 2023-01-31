@@ -88,10 +88,12 @@ func onUpdate(status *mastodon.Status) {
 			ohome[rand.Intn(len(ohome))],
 		)
 		toot := &mastodon.Toot{
-			Status:      text,
-			InReplyToID: status.ID,
-			Visibility:  "unlisted",
-			Language:    "ja",
+			Status:     text,
+			Visibility: "unlisted",
+			Language:   "ja",
+		}
+		if status.Reblog != nil {
+			toot.InReplyToID = status.ID
 		}
 		_, err := mstdn.PostStatus(context.Background(), toot)
 		if err != nil {
