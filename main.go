@@ -10,11 +10,13 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/mattn/go-mastodon"
 	crontab "github.com/robfig/cron/v3"
 	"github.com/samber/lo"
+	"golang.org/x/text/width"
 )
 
 var mstdn *mastodon.Client
@@ -98,6 +100,16 @@ func onUpdate(status *mastodon.Status) {
 		_, err := mstdn.PostStatus(context.Background(), toot)
 		if err != nil {
 			log.Println(err)
+		}
+	}
+	{ // Favorite
+		content := strings.ToLower(width.Fold.String(status.Content))
+		for _, fav := range favorites {
+			if strings.Contains(content, fav) {
+				log.Println("Favorited:", status.ID)
+				go mstdn.Favourite(context.Background(), status.ID)
+				break
+			}
 		}
 	}
 }
