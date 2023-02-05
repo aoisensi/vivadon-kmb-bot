@@ -82,12 +82,20 @@ func onUpdate(status *mastodon.Status) {
 	if status.Account.StatusesCount%686 == 0 {
 		count := status.Account.StatusesCount
 		killme := count / 686
+		flavor := ""
+		if killme == 686 {
+			flavor = "あなたがカヅホ神ですか！？"
+		} else if killme%10 > 0 {
+			flavor = ohome[rand.Intn(len(ohome))]
+		} else {
+			flavor = majires[rand.Intn(len(majires))]
+		}
 		text := fmt.Sprintf(
-			"@%v さんが、投稿数\"%v\"(%vキルミー)\nに到達したよ！！\n%v",
+			"@%v さんが、投稿数: %v\n(%vキルミー) に到達したよ！！\n%v",
 			status.Account.Username,
 			count,
 			killme,
-			ohome[rand.Intn(len(ohome))],
+			flavor,
 		)
 		toot := &mastodon.Toot{
 			Status:     text,
