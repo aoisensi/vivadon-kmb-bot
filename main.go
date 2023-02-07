@@ -120,6 +120,7 @@ func onUpdate(status *mastodon.Status) {
 			}
 		}
 	}
+	onUpdatePopular(status)
 }
 
 func onNotification(notif *mastodon.Notification) {
