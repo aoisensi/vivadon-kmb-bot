@@ -79,8 +79,8 @@ func streamUser() {
 }
 
 func onUpdate(status *mastodon.Status) {
-	if status.Account.StatusesCount%686 == 0 {
-		count := status.Account.StatusesCount
+	count := status.Account.StatusesCount
+	if count%686 == 0 {
 		killme := count / 686
 		flavor := ""
 		if killme == 686 {

@@ -28,8 +28,8 @@ var popularPower = map[string]time.Time{
 }
 
 var popularCooldown = time.Minute
-var popularBoost = time.Second * 3
-var popularThreshold = time.Second * 5
+var popularBoost = time.Second * 7
+var popularThreshold = time.Second * 10
 
 var popularLaunchedAt time.Time
 
