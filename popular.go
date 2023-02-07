@@ -50,13 +50,14 @@ func onUpdatePopular(status *mastodon.Status) {
 			popularLaunchedAt = time.Now()
 			go func() {
 				time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
-				_, err := mstdn.PostStatus(context.Background(), &mastodon.Toot{
+				status, err := mstdn.PostStatus(context.Background(), &mastodon.Toot{
 					Status:   content,
 					Language: "ja",
 				})
 				if err != nil {
 					log.Println(err)
 				}
+				log.Println("Tooted: ", status.ID)
 			}()
 		}
 	}

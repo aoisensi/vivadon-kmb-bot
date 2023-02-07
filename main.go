@@ -105,10 +105,11 @@ func onUpdate(status *mastodon.Status) {
 		if status.Reblog != nil {
 			toot.InReplyToID = status.ID
 		}
-		_, err := mstdn.PostStatus(context.Background(), toot)
+		content, err := mstdn.PostStatus(context.Background(), toot)
 		if err != nil {
 			log.Println(err)
 		}
+		log.Println("Tooted:", content.ID)
 	}
 	{ // Favorite
 		content := strings.ToLower(width.Fold.String(status.Content))
