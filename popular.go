@@ -27,9 +27,9 @@ var popularPower = map[string]time.Time{
 	":tony_wee:":        {},
 }
 
-var popularCooldown = time.Minute
-var popularBoost = time.Second * 7
-var popularThreshold = time.Second * 10
+var popularCooldown = time.Minute * 5
+var popularBoost = time.Second * 15
+var popularThreshold = time.Second * 30
 
 var popularLaunchedAt time.Time
 
@@ -41,6 +41,7 @@ func onUpdatePopular(status *mastodon.Status) {
 	content = strings.TrimLeft(content, "<p>")
 	content = strings.TrimRight(content, "</p>")
 	if t, ok := popularPower[content]; ok {
+		log.Println("Popular: ", content)
 		if t.Before(time.Now()) {
 			t = time.Now()
 		}
