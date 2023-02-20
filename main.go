@@ -92,7 +92,7 @@ func onUpdate(status *mastodon.Status) {
 		}
 		text := fmt.Sprintf(
 			"@%v さんが、投稿数: %v\n(%vキルミー) に到達したよ！！\n%v",
-			status.Account.Username,
+			status.Account.Acct,
 			count,
 			killme,
 			flavor,
