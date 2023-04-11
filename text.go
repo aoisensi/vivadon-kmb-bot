@@ -56,7 +56,8 @@ var favorites = []string{
 	"686",
 	"六八六",
 	"六百八十六",
-	"DCLXXXVI",
+	"六百八拾六",
+	"dclxxxvi",
 	"わさわさ",
 	"ワサワサ",
 }
