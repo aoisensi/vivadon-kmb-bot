@@ -102,9 +102,6 @@ func onUpdate(status *mastodon.Status) {
 			Visibility: "unlisted",
 			Language:   "ja",
 		}
-		if status.Reblog != nil {
-			toot.InReplyToID = status.ID
-		}
 		content, err := mstdn.PostStatus(context.Background(), toot)
 		if err != nil {
 			log.Println(err)
